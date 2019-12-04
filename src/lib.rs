@@ -210,4 +210,66 @@ fn day3_test() {
     assert_eq!(solve_day3_part2(&inp), 610);
 }
 
+#[aoc_generator(day4)]
+pub fn input_generator_day4(_input: &str) -> Vec<usize> {
+    Vec::new()
+}
+
+fn day4(val: i32, part2: bool) -> bool {
+    let mut digits = Vec::new();
+    let mut x = val;
+    for _ in 0..6 {
+        let digit = x % 10;
+        x = x / 10;
+        digits.push(digit);
+    }
+    let mut conseq = [0; 10];
+    for x in digits.windows(2) {
+        if x[0] < x[1] {
+            return false;
+        }
+        if x[0] == x[1] {
+            conseq[x[0] as usize] += 1;
+        }
+    }
+    if part2 {
+        conseq.iter().any(|x| *x == 1)
+    } else {
+        conseq.iter().any(|x| *x > 0)
+    }
+}
+
+#[aoc(day4, part1)]
+pub fn solve_day4_part1(_input: &[usize]) -> usize {
+    let mut count = 0;
+    for x in 382345..843167 {
+        if day4(x, false) {
+            count += 1;
+        }
+    }
+    count
+}
+
+#[test]
+fn test_day4() {
+    assert_eq!(day4(111111, false), true);
+    assert_eq!(day4(223450, false), false);
+    assert_eq!(day4(123789, false), false);
+    assert_eq!(day4(122345, false), true);
+    assert_eq!(day4(112233, true), true);
+    assert_eq!(day4(123444, true), false);
+    assert_eq!(day4(111122, true), true);
+}
+
+#[aoc(day4, part2)]
+pub fn solve_day4_part2(_input: &[usize]) -> usize {
+    let mut count = 0;
+    for x in 382345..843167 {
+        if day4(x, true) {
+            count += 1;
+        }
+    }
+    count
+}
+
 aoc_lib! { year = 2019 }
