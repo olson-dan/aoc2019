@@ -297,10 +297,11 @@ fn fetch3(v: &[isize], ip: usize, inst: isize) -> (isize, isize, isize) {
 }
 */
 
-fn day5(input: &[isize], inp: isize) -> Vec<isize> {
+fn day5(input: &[isize], inp: Vec<isize>) -> Vec<isize> {
     let mut out = Vec::new();
     let mut i = 0usize;
     let mut v = input.to_vec();
+    let mut inp_index = 0;
     loop {
         match v[i] {
             99 => break,
@@ -326,7 +327,8 @@ fn day5(input: &[isize], inp: isize) -> Vec<isize> {
                 let mode0 = (a / 100) % 10;
                 assert_eq!(mode0, 0);
                 let x = v[i + 1];
-                v[x as usize] = inp;
+                v[x as usize] = inp[inp_index];
+                inp_index += 1;
                 i += 2;
             }
             a if a % 100 == 4 => {
@@ -394,6 +396,7 @@ fn day5(input: &[isize], inp: isize) -> Vec<isize> {
     }
     out
 }
+
 #[aoc_generator(day5)]
 pub fn input_generator_day5(input: &str) -> Vec<isize> {
     input
@@ -404,13 +407,13 @@ pub fn input_generator_day5(input: &str) -> Vec<isize> {
 
 #[aoc(day5, part1)]
 pub fn solve_day5_part1(input: &[isize]) -> isize {
-    let ret = day5(input, 1);
+    let ret = day5(input, vec![1]);
     *ret.last().unwrap()
 }
 
 #[aoc(day5, part2)]
 pub fn solve_day5_part2(input: &[isize]) -> isize {
-    let ret = day5(input, 5);
+    let ret = day5(input, vec![5]);
     *ret.last().unwrap()
 }
 
@@ -489,6 +492,220 @@ fn test_day6() {
         4,
         solve_day6_part2(&input_generator_day6(
             "COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L\nK)YOU\nI)SAN"
+        ))
+    );
+}
+
+#[aoc_generator(day7)]
+pub fn input_generator_day7(input: &str) -> Vec<isize> {
+    input
+        .split(',')
+        .map(|x| x.trim().parse().unwrap())
+        .collect()
+}
+
+use itertools::Itertools;
+
+#[aoc(day7, part1)]
+pub fn solve_day7_part1(input: &[isize]) -> isize {
+    let mut max = isize::min_value();
+    for x in (0..5).permutations(5) {
+        let a = day5(input, vec![x[0], 0]);
+        let b = day5(input, vec![x[1], a[0]]);
+        let c = day5(input, vec![x[2], b[0]]);
+        let d = day5(input, vec![x[3], c[0]]);
+        let e = day5(input, vec![x[4], d[0]]);
+        max = std::cmp::max(max, e[0]);
+    }
+    max
+}
+
+#[derive(Default)]
+struct Day7State {
+    input: Vec<isize>,
+    output: Vec<isize>,
+    memory: Vec<isize>,
+    i: usize,
+    inp_index: usize,
+}
+
+fn day7_step(s: &mut Day7State) -> bool {
+    let v = &mut s.memory;
+    match v[s.i] {
+        99 => return false,
+        a if a % 100 == 1 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 { x } else { v[x as usize] };
+            let y = if mode1 == 1 { y } else { v[y as usize] };
+            v[z as usize] = x + y;
+            s.i += 4;
+        }
+        a if a % 100 == 2 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 { x } else { v[x as usize] };
+            let y = if mode1 == 1 { y } else { v[y as usize] };
+            v[z as usize] = x * y;
+            s.i += 4;
+        }
+        a if a % 100 == 3 => {
+            if s.inp_index >= s.input.len() {
+                // Stall waiting for input.
+                return true;
+            }
+            let mode0 = (a / 100) % 10;
+            assert_eq!(mode0, 0);
+            let x = v[s.i + 1];
+            v[x as usize] = s.input[s.inp_index];
+            s.inp_index += 1;
+            s.i += 2;
+        }
+        a if a % 100 == 4 => {
+            let mode0 = (a / 100) % 10;
+            let x = v[s.i + 1];
+            if mode0 == 1 {
+                s.output.push(x);
+            } else {
+                s.output.push(v[x as usize]);
+            }
+            s.i += 2;
+        }
+        a if a % 100 == 5 => {
+            let (x, y) = (v[s.i + 1], v[s.i + 2]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 { x } else { v[x as usize] };
+            let y = if mode1 == 1 { y } else { v[y as usize] };
+            if x != 0 {
+                s.i = y as usize;
+            } else {
+                s.i += 3;
+            }
+        }
+        a if a % 100 == 6 => {
+            let (x, y) = (v[s.i + 1], v[s.i + 2]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 { x } else { v[x as usize] };
+            let y = if mode1 == 1 { y } else { v[y as usize] };
+            if x == 0 {
+                s.i = y as usize;
+            } else {
+                s.i += 3;
+            }
+        }
+        a if a % 100 == 7 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 { x } else { v[x as usize] };
+            let y = if mode1 == 1 { y } else { v[y as usize] };
+            if x < y {
+                v[z as usize] = 1;
+            } else {
+                v[z as usize] = 0;
+            }
+            s.i += 4;
+        }
+        a if a % 100 == 8 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 { x } else { v[x as usize] };
+            let y = if mode1 == 1 { y } else { v[y as usize] };
+            if x == y {
+                v[z as usize] = 1;
+            } else {
+                v[z as usize] = 0;
+            }
+            s.i += 4;
+        }
+        _ => unimplemented!(),
+    }
+    true
+}
+
+#[aoc(day7, part2)]
+pub fn solve_day7_part2(input: &[isize]) -> isize {
+    let mut max = isize::min_value();
+    for x in (5..10).permutations(5) {
+        let mut a = Day7State::default();
+        let mut b = Day7State::default();
+        let mut c = Day7State::default();
+        let mut d = Day7State::default();
+        let mut e = Day7State::default();
+        a.memory = input.to_vec();
+        b.memory = input.to_vec();
+        c.memory = input.to_vec();
+        d.memory = input.to_vec();
+        e.memory = input.to_vec();
+        a.input = vec![x[0], 0];
+        b.input = vec![x[1]];
+        c.input = vec![x[2]];
+        d.input = vec![x[3]];
+        e.input = vec![x[4]];
+        let mut processing = vec![true; 5];
+        while processing.iter().any(|x| *x) {
+            if processing[0] {
+                let i = a.output.len();
+                processing[0] = day7_step(&mut a);
+                if a.output.len() != i {
+                    for val in i..a.output.len() {
+                        b.input.push(a.output[val]);
+                    }
+                }
+            }
+            if processing[1] {
+                let i = b.output.len();
+                processing[1] = day7_step(&mut b);
+                if b.output.len() != i {
+                    for val in i..b.output.len() {
+                        c.input.push(b.output[val]);
+                    }
+                }
+            }
+            if processing[2] {
+                let i = c.output.len();
+                processing[2] = day7_step(&mut c);
+                if c.output.len() != i {
+                    for val in i..c.output.len() {
+                        d.input.push(c.output[val]);
+                    }
+                }
+            }
+            if processing[3] {
+                let i = d.output.len();
+                processing[3] = day7_step(&mut d);
+                if d.output.len() != i {
+                    for val in i..d.output.len() {
+                        e.input.push(d.output[val]);
+                    }
+                }
+            }
+            if processing[4] {
+                let i = e.output.len();
+                processing[4] = day7_step(&mut e);
+                if e.output.len() != i {
+                    for val in i..e.output.len() {
+                        a.input.push(e.output[val]);
+                    }
+                }
+            }
+        }
+        max = std::cmp::max(max, *e.output.last().unwrap());
+    }
+    max
+}
+
+#[test]
+fn day7_test() {
+    assert_eq!(
+        139629729,
+        solve_day7_part2(&input_generator_day7(
+            "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
         ))
     );
 }
