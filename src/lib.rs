@@ -520,6 +520,8 @@ pub fn solve_day7_part1(input: &[isize]) -> isize {
     max
 }
 
+//mod intcode;
+
 #[derive(Default)]
 struct Day7State {
     input: Vec<isize>,
@@ -708,6 +710,52 @@ fn day7_test() {
             "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
         ))
     );
+}
+
+#[aoc_generator(day8)]
+pub fn input_generator_day8(input: &str) -> Vec<String> {
+    let mut x = input.to_string();
+    let mut out = Vec::new();
+    loop {
+        let (a, b) = x.split_at(25 * 6);
+        out.push(a.to_string());
+        x = b.to_string();
+        if x.is_empty() {
+            break;
+        }
+    }
+
+    out
+}
+
+#[aoc(day8, part1)]
+pub fn solve_day8_part1(input: &[String]) -> usize {
+    let fewest_zeros = input
+        .iter()
+        .min_by_key(|x| Some(x.chars().filter(|y| *y == '0').count()))
+        .unwrap();
+    let ones = fewest_zeros.chars().filter(|x| *x == '1').count();
+    let twos = fewest_zeros.chars().filter(|x| *x == '2').count();
+    ones * twos
+}
+
+#[aoc(day8, part2)]
+pub fn solve_day8_part2(input: &[String]) -> isize {
+    let mut out: Vec<char> = vec![' '; input[0].len()];
+    for s in input.iter().rev() {
+        for (i, c) in s.char_indices() {
+            if c != '2' {
+                out[i] = c;
+            }
+        }
+    }
+    for y in 0..6 {
+        for x in 0..25 {
+            print!("{}", if out[y * 25 + x] == '0' { ' ' } else { '*' });
+        }
+        println!();
+    }
+    0
 }
 
 aoc_lib! { year = 2019 }
