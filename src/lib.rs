@@ -758,4 +758,242 @@ pub fn solve_day8_part2(input: &[String]) -> isize {
     0
 }
 
+#[aoc_generator(day9)]
+pub fn input_generator_day9(input: &str) -> Vec<isize> {
+    input
+        .split(',')
+        .map(|x| x.trim().parse().unwrap())
+        .collect()
+}
+
+#[derive(Default)]
+struct Day9State {
+    input: Vec<isize>,
+    output: Vec<isize>,
+    memory: Vec<isize>,
+    i: usize,
+    inp_index: usize,
+    relative_base: isize,
+}
+
+fn day9_step(s: &mut Day9State) -> bool {
+    let v = &mut s.memory;
+    match v[s.i] {
+        99 => return false,
+        a if a % 100 == 1 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let mode2 = (a / 10000) % 10;
+            let x = if mode0 == 1 {
+                x
+            } else if mode0 == 2 {
+                v[(x + s.relative_base) as usize]
+            } else {
+                v[x as usize]
+            };
+            let y = if mode1 == 1 {
+                y
+            } else if mode1 == 2 {
+                v[(y + s.relative_base) as usize]
+            } else {
+                v[y as usize]
+            };
+            let z = if mode2 == 0 { z } else { z + s.relative_base };
+            v[z as usize] = x + y;
+            s.i += 4;
+        }
+        a if a % 100 == 2 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let mode2 = (a / 10000) % 10;
+            let x = if mode0 == 1 {
+                x
+            } else if mode0 == 2 {
+                v[(x + s.relative_base) as usize]
+            } else {
+                v[x as usize]
+            };
+            let y = if mode1 == 1 {
+                y
+            } else if mode1 == 2 {
+                v[(y + s.relative_base) as usize]
+            } else {
+                v[y as usize]
+            };
+            let z = if mode2 == 0 { z } else { z + s.relative_base };
+            v[z as usize] = x * y;
+            s.i += 4;
+        }
+        a if a % 100 == 3 => {
+            if s.inp_index >= s.input.len() {
+                // Stall waiting for input.
+                return true;
+            }
+            let mode0 = (a / 100) % 10;
+            let x = v[s.i + 1];
+            let x = if mode0 == 0 { x } else { x + s.relative_base };
+            v[x as usize] = s.input[s.inp_index];
+            s.inp_index += 1;
+            s.i += 2;
+        }
+        a if a % 100 == 4 => {
+            let mode0 = (a / 100) % 10;
+            let x = v[s.i + 1];
+            if mode0 == 1 {
+                s.output.push(x);
+            } else if mode0 == 2 {
+                s.output.push(v[(x + s.relative_base) as usize]);
+            } else {
+                s.output.push(v[x as usize]);
+            }
+            s.i += 2;
+        }
+        a if a % 100 == 5 => {
+            let (x, y) = (v[s.i + 1], v[s.i + 2]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 {
+                x
+            } else if mode0 == 2 {
+                v[(x + s.relative_base) as usize]
+            } else {
+                v[x as usize]
+            };
+            let y = if mode1 == 1 {
+                y
+            } else if mode1 == 2 {
+                v[(y + s.relative_base) as usize]
+            } else {
+                v[y as usize]
+            };
+            if x != 0 {
+                s.i = y as usize;
+            } else {
+                s.i += 3;
+            }
+        }
+        a if a % 100 == 6 => {
+            let (x, y) = (v[s.i + 1], v[s.i + 2]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let x = if mode0 == 1 {
+                x
+            } else if mode0 == 2 {
+                v[(x + s.relative_base) as usize]
+            } else {
+                v[x as usize]
+            };
+            let y = if mode1 == 1 {
+                y
+            } else if mode1 == 2 {
+                v[(y + s.relative_base) as usize]
+            } else {
+                v[y as usize]
+            };
+            if x == 0 {
+                s.i = y as usize;
+            } else {
+                s.i += 3;
+            }
+        }
+        a if a % 100 == 7 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let mode2 = (a / 10000) % 10;
+            let x = if mode0 == 1 {
+                x
+            } else if mode0 == 2 {
+                v[(x + s.relative_base) as usize]
+            } else {
+                v[x as usize]
+            };
+            let y = if mode1 == 1 {
+                y
+            } else if mode1 == 2 {
+                v[(y + s.relative_base) as usize]
+            } else {
+                v[y as usize]
+            };
+            let z = if mode2 == 0 { z } else { z + s.relative_base };
+            if x < y {
+                v[z as usize] = 1;
+            } else {
+                v[z as usize] = 0;
+            }
+            s.i += 4;
+        }
+        a if a % 100 == 8 => {
+            let (x, y, z) = (v[s.i + 1], v[s.i + 2], v[s.i + 3]);
+            let mode0 = (a / 100) % 10;
+            let mode1 = (a / 1000) % 10;
+            let mode2 = (a / 10000) % 10;
+            let x = if mode0 == 1 {
+                x
+            } else if mode0 == 2 {
+                v[(x + s.relative_base) as usize]
+            } else {
+                v[x as usize]
+            };
+            let y = if mode1 == 1 {
+                y
+            } else if mode1 == 2 {
+                v[(y + s.relative_base) as usize]
+            } else {
+                v[y as usize]
+            };
+            let z = if mode2 == 0 { z } else { z + s.relative_base };
+            if x == y {
+                v[z as usize] = 1;
+            } else {
+                v[z as usize] = 0;
+            }
+            s.i += 4;
+        }
+        a if a % 100 == 9 => {
+            let x = v[s.i + 1];
+            let mode0 = (a / 100) % 10;
+            let x = if mode0 == 1 {
+                x
+            } else if mode0 == 2 {
+                v[(x + s.relative_base) as usize]
+            } else {
+                v[x as usize]
+            };
+            s.relative_base += x;
+            s.i += 2;
+        }
+        _ => unimplemented!(),
+    }
+    true
+}
+
+#[aoc(day9, part1)]
+pub fn solve_day9_part1(input: &[isize]) -> isize {
+    let mut a = Day9State::default();
+    a.memory = input.to_vec();
+    a.memory.extend(vec![0; 1000]);
+    a.input = vec![1];
+    while day9_step(&mut a) {
+        //
+    }
+    assert!(a.output.len() == 1);
+    a.output[0]
+}
+
+#[aoc(day9, part2)]
+pub fn solve_day9_part2(input: &[isize]) -> isize {
+    let mut a = Day9State::default();
+    a.memory = input.to_vec();
+    a.memory.extend(vec![0; 1000]);
+    a.input = vec![2];
+    while day9_step(&mut a) {
+        //
+    }
+    assert!(a.output.len() == 1);
+    a.output[0]
+}
+
 aoc_lib! { year = 2019 }
